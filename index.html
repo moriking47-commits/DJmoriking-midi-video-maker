@@ -26,14 +26,17 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5}
-.app{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:16px;min-height:100%}
-@media (max-width:900px){.app{grid-template-columns:1fr}}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 370px;grid-template-rows:auto minmax(0,1fr);gap:16px;padding:16px;height:100%}
+.stage{overflow:auto;min-height:0}
+.console{overflow-y:auto;min-height:0;padding-right:6px;overscroll-behavior:contain}
+.console::-webkit-scrollbar{width:8px}.console::-webkit-scrollbar-thumb{background:#2f2942;border-radius:8px}
+@media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:none;height:auto;min-height:100%}.stage{position:sticky;top:0;z-index:2;background:var(--bg);padding-bottom:8px;overflow:visible}.console{overflow:visible}}
 header.top{grid-column:1/-1;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 header.top h1{font-family:var(--font-display);font-weight:400;font-size:22px;margin:0;letter-spacing:.02em;text-wrap:balance}
 header.top h1 span{color:var(--accent)}
 header.top p{margin:0;color:var(--muted);font-size:13px}
 .stage{display:flex;flex-direction:column;gap:10px;min-width:0}
-.screen{background:#000;border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;max-height:calc(100vh - 210px)}
+.screen{background:#000;border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;max-height:calc(100vh - 230px);max-width:100%;margin:0 auto}
 .screen canvas{max-width:100%;max-height:100%;display:block}
 .transport{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .transport input[type=range]{flex:1;min-width:160px}
@@ -42,6 +45,21 @@ header.top p{margin:0;color:var(--muted);font-size:13px}
 .status.rec{color:var(--rec);font-weight:700}
 .status.ok{color:var(--accent)}
 .console{display:flex;flex-direction:column;gap:12px}
+.clist{display:flex;flex-direction:column;gap:4px}
+.crow{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:6px;padding:4px 6px;border-radius:6px}
+.crow:hover{background:#1d1929}
+.crow .nm{font-size:13px}
+.crow .cnt{font-family:var(--font-mono);width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.crow .cnt.on{color:var(--hot);font-weight:700}
+.mini{background:#0f0d18;color:var(--ink);border:1px solid var(--line);border-radius:6px;width:28px;height:26px;font:inherit;cursor:pointer;padding:0}
+.mini:hover{border-color:var(--accent)}
+.cust{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0f0d18}
+.cust img{width:44px;height:44px;object-fit:contain;background:repeating-conic-gradient(#221d31 0 25%,#16131f 0 50%) 0 0/10px 10px;border-radius:6px}
+.cust .ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cust .ctl .ln{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);white-space:nowrap}
+.cust select{flex:1;min-width:0}
+.cust select{padding:4px 6px;font-size:12px}
+.cust input[type=range]{flex:1;min-width:0}
 details.group{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0}
 details.group>summary{cursor:pointer;list-style:none;padding:10px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
 details.group>summary::-webkit-details-marker{display:none}
@@ -132,15 +150,6 @@ video.result{width:100%;border-radius:8px;border:1px solid var(--line);display:n
         <label class="f">DJの位置
           <div class="seg" id="djSeg"><button data-v="left" aria-pressed="true">左</button><button data-v="right" aria-pressed="false">右</button><button data-v="off" aria-pressed="false">なし</button></div>
         </label>
-        <label class="f">キャラ（複数選べます）
-          <div class="chips" id="charChips">
-            <button data-v="ufo" aria-pressed="true">UFO</button><button data-v="alien" aria-pressed="false">宇宙人</button><button data-v="kaiju" aria-pressed="false">火を吹く怪獣</button>
-            <button data-v="dog" aria-pressed="true">とぼとぼ犬</button><button data-v="crab" aria-pressed="false">横歩きカニ</button><button data-v="car" aria-pressed="false">ローライダー</button>
-          </div>
-        </label>
-        <label class="f">猫
-          <div class="seg" id="catSeg"><button data-v="0" aria-pressed="false">なし</button><button data-v="1" aria-pressed="true">1匹</button><button data-v="2" aria-pressed="false">2匹</button></div>
-        </label>
         <div class="row">
           <label class="f" for="winIn">表示範囲 <span id="winLbl">6.0 秒</span><input type="range" id="winIn" min="2" max="14" step="0.5" value="6"></label>
           <label class="f" for="ampIn">ノリの強さ <span id="ampLbl">1.0</span><input type="range" id="ampIn" min="0" max="2" step="0.1" value="1"></label>
@@ -149,7 +158,18 @@ video.result{width:100%;border-radius:8px;border:1px solid var(--line);display:n
     </details>
 
     <details class="group" open>
-      <summary><span><span class="step">04</span>テキスト</span></summary>
+      <summary><span><span class="step">04</span>キャラ</span></summary>
+      <div class="body">
+        <div class="clist" id="charList"></div>
+        <p class="hint">それぞれ0〜3体まで。数を増やすと、同じキャラが別々の動きで出てきます。</p>
+        <label class="drop" for="custIn"><span class="k">＋ ADD</span><span class="v">自作キャラの画像を追加（PNG、複数OK）</span><input type="file" id="custIn" accept="image/*" multiple></label>
+        <div class="clist" id="custList"></div>
+        <p class="hint">白い背景の画像は自動で背景を抜きます。動き方と大きさは1体ずつ変えられます。</p>
+      </div>
+    </details>
+
+    <details class="group" open>
+      <summary><span><span class="step">05</span>テキスト</span></summary>
       <div class="body">
         <label class="f" for="tagIn">ハッシュタグ（先頭・緑）<input type="text" id="tagIn" value="【11/3 #深夜の2時間DTM 1577th】"></label>
         <label class="f" for="titleIn">お題・曲名（続けて白）<input type="text" id="titleIn" value="本日のお題は「ジャンル：レゲエ」"></label>
@@ -159,7 +179,7 @@ video.result{width:100%;border-radius:8px;border:1px solid var(--line);display:n
     </details>
 
     <details class="group" open>
-      <summary><span><span class="step">05</span>書き出し</span></summary>
+      <summary><span><span class="step">06</span>書き出し</span></summary>
       <div class="body">
         <div class="row">
           <label class="f" for="startIn">開始（秒）<input type="number" id="startIn" min="0" step="0.1" value="0"></label>
@@ -240,7 +260,7 @@ function parseMidi(buf){
 
 /* ---------- state ---------- */
 const PALETTE=["#ff6b81","#ffb347","#ffe66d","#7cf29c","#4dd9ff","#8c7bff","#ff7ad9","#c3f07a","#5ef0d8","#ffa0a0"];
-const S={tail:7,lastNote:0,chars:new Set(["ufo","dog"]),cats:"1",midi:null,enabled:new Set(),trackColor:{},aspect:"16:9",color:"pitch",dj:"left",win:6,amp:1,
+const S={tail:7,lastNote:0,count:{cat:1,ufo:1,alien:0,kaiju:0,dog:1,crab:0,car:0},custom:[],midi:null,enabled:new Set(),trackColor:{},aspect:"16:9",color:"pitch",dj:"left",win:6,amp:1,
   title:"本日のお題は「ジャンル：レゲエ」",tag:"【11/3 #深夜の2時間DTM 1577th】",credit:"DJ moriking",start:0,end:0,off:0,res:1080,
   pos:0,playing:false,recording:false,audioURL:null,customImg:false};
 const $=id=>document.getElementById(id);
@@ -398,30 +418,49 @@ const FACE={};
 function faceOf(id,dx){ if(dx>3)FACE[id]=1; else if(dx<-3)FACE[id]=-1; return FACE[id]||1; }
 function depth(y,H){ return 0.72+0.28*Math.max(0,Math.min(1,(y-H*0.3)/(H*0.68))); }
 function drawChars(t,bp,W,H,u){
-  const C=S.chars; if(!C.size) return;
+  const N=S.count;
   const fr=((bp%1)+1)%1, beat=Math.floor(bp), bpb=S.midi.sig.num, barStart=(((beat%bpb)+bpb)%bpb)===0;
-  const k=R.kick*S.amp, B=Math.max(0,bp), list=[];
-  if(C.has("kaiju")){ const m=plan(11,B,{x0:0.12,x1:0.92,lanes:[0.985],pause:0.3,dash:0.12,d0:2,d1:7,reverse:0.45},W,H);
-    list.push({y:m.y+1,f:()=>{ const s=400*u, face=faceOf(11,m.dx)===1?-1:1, step=m.moving?Math.exp(-fr*7):0;
+  const k=R.kick*S.amp, B=Math.max(0,bp), list=[], sky=[];
+  R.stomp=0;
+  for(let i=0;i<N.kaiju;i++){ const id=11+i*101, m=plan(id,B,{x0:0.12,x1:0.92,lanes:[0.985],pause:0.3,dash:0.12,d0:2,d1:7,reverse:0.45},W,H);
+    if(m.moving) R.stomp=1;
+    list.push({y:m.y+1,f:()=>{ const s=400*u, face=faceOf(id,m.dx)===1?-1:1, step=m.moving?Math.exp(-fr*7):0;
       const fire=m.type==="pause"?Math.sin(Math.min(1,m.p*1.3)*Math.PI):(R.lvl>0.8?0.6:0);
-      R.stomp=m.moving?1:0;
       ctx.save(); ctx.translate(m.x,m.y-step*8*u); ctx.scale(face,1); drawKaiju(0,0,s,beat,fire,t); ctx.restore(); }}); }
-  else R.stomp=0;
-  if(C.has("car")){ const m=plan(12,B,{x0:0.03,x1:0.97,lanes:[0.93,0.985],pause:0.2,dash:0.35,d0:1,d1:4,reverse:0.5},W,H);
-    list.push({y:m.y,f:()=>{ const s=290*u*depth(m.y,H), face=faceOf(12,m.dx)===1?-1:1;
+  for(let i=0;i<N.car;i++){ const id=12+i*101, m=plan(id,B,{x0:0.03,x1:0.97,lanes:[0.93,0.985],pause:0.2,dash:0.35,d0:1,d1:4,reverse:0.5},W,H);
+    list.push({y:m.y,f:()=>{ const s=290*u*depth(m.y,H), face=faceOf(id,m.dx)===1?-1:1;
       ctx.save(); ctx.translate(m.x,m.y); ctx.scale(face,1); drawCar(0,0,s,face*m.x/(s*0.09),k,beat,fr,m.moving); ctx.restore(); }}); }
-  if(C.has("dog")){ const m=plan(13,B,{x0:0.08,x1:0.92,y0:0.38,y1:0.97,pause:0.22,dash:0.15,d0:3,d1:7},W,H);
-    list.push({y:m.y,f:()=>{ const s=175*u*depth(m.y,H), face=faceOf(13,m.dx), run=m.type==="dash";
+  for(let i=0;i<N.dog;i++){ const id=13+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.38,y1:0.97,pause:0.22,dash:0.15,d0:3,d1:7},W,H);
+    list.push({y:m.y,f:()=>{ const s=175*u*depth(m.y,H), face=faceOf(id,m.dx), run=m.type==="dash";
       ctx.save(); ctx.translate(m.x,m.y); ctx.scale(face,1); drawDog(0,0,s,run?Math.floor(bp*4):(m.moving?beat:0),run?(bp*4)%1:(m.moving?fr:0),run); ctx.restore(); }}); }
-  if(C.has("crab")){ const m=plan(14,B,{x0:0.06,x1:0.94,y0:0.35,y1:0.97,pause:0.3,dash:0.3,d0:1,d1:3,reverse:0.4},W,H);
+  for(let i=0;i<N.crab;i++){ const id=14+i*101, m=plan(id,B,{x0:0.06,x1:0.94,y0:0.35,y1:0.97,pause:0.3,dash:0.3,d0:1,d1:3,reverse:0.4},W,H);
     list.push({y:m.y,f:()=>drawCrab(m.x,m.y,150*u*depth(m.y,H),m.moving?bp:Math.floor(bp),fr)}); }
-  if(C.has("alien")){ const m=plan(15,B,{x0:0.08,x1:0.92,y0:0.35,y1:0.97,pause:0.25,dash:0.15,warp:0.2,d0:2,d1:5},W,H);
+  for(let i=0;i<N.alien;i++){ const id=15+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.35,y1:0.97,pause:0.25,dash:0.15,warp:0.2,d0:2,d1:5},W,H);
     list.push({y:m.y,f:()=>{ ctx.save(); ctx.globalAlpha=m.warpA; drawAlien(m.x,m.y,175*u*depth(m.y,H)*(0.6+0.4*m.warpA),bp,fr,barStart||m.type==="pause");
       if(m.type==="warp"&&m.warpA<0.9){ ctx.globalAlpha=1-m.warpA; ctx.strokeStyle="#7be37b"; ctx.lineWidth=3*u; ctx.beginPath(); ctx.ellipse(m.x,m.y-90*u,60*u*(1.5-m.warpA),120*u,0,0,Math.PI*2); ctx.stroke(); }
       ctx.restore(); }}); }
+  // user-added characters
+  for(const c of S.custom){
+    const id=500+c.id*53, mode=c.mode;
+    const O={walk:{x0:0.06,x1:0.94,y0:0.35,y1:0.97,pause:0.25,dash:0.2,d0:1,d1:4,reverse:0.3},
+             ground:{x0:0.04,x1:0.96,lanes:[0.985],pause:0.2,dash:0.25,d0:1,d1:4,reverse:0.5},
+             fly:{x0:0.1,x1:0.9,y0:0.14,y1:0.5,pause:0.2,dash:0.3,d0:2,d1:5}}[mode];
+    const m=O?plan(id,B,O,W,H):{x:W*(0.12+0.76*h2(id,0,1)),y:H*(0.6+0.36*h2(id,0,2)),dx:0,moving:false,p:0,type:"pause"};
+    const item={y:m.y,f:()=>{
+      const img=c.img, h=c.size*u*(mode==="fly"?1:depth(m.y,H)), w=h*img.width/img.height;
+      const hop=m.moving&&mode!=="fly"?Math.sin(fr*Math.PI)*0.14*h*S.amp:0, bob=Math.exp(-fr*6)*0.04*h*S.amp;
+      const fly=mode==="fly"?Math.sin(bp*Math.PI)*0.06*h:0;
+      const sq=Math.min(1,k)*0.1, face=(mode==="stay"?(Math.floor(bp/2)%2?1:-1):faceOf(id,m.dx))*(c.flip?-1:1);
+      const tilt=mode==="fly"?Math.max(-0.25,Math.min(0.25,m.dx/(W*0.4)*Math.sin(m.p*Math.PI))):(mode==="stay"?Math.sin(bp*Math.PI)*0.08:0);
+      if(mode!=="fly"){ ctx.fillStyle="rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(m.x,m.y,w*0.38,h*0.05,0,0,Math.PI*2); ctx.fill(); }
+      ctx.save(); ctx.translate(m.x,m.y-hop-bob+fly); ctx.rotate(tilt); ctx.scale(face*(1+sq*0.6),1-sq);
+      ctx.drawImage(img,-w/2,-h,w,h); ctx.restore(); }};
+    (mode==="fly"?sky:list).push(item);
+  }
   list.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
-  if(C.has("ufo")){ const m=plan(16,B,{x0:0.12,x1:0.88,y0:0.14,y1:0.4,pause:0.2,dash:0.3,d0:2,d1:6},W,H);
-    drawUFO(m.x,m.y+Math.sin(bp*Math.PI)*12*u,260*u,bp,k,Math.max(-0.3,Math.min(0.3,m.dx/(W*0.3)*(m.type==="pause"?0:Math.sin(m.p*Math.PI)))),H*0.985); }
+  sky.forEach(o=>o.f());
+  for(let i=0;i<N.ufo;i++){ const id=16+i*101, m=plan(id,B,{x0:0.12,x1:0.88,y0:0.14,y1:0.4,pause:0.2,dash:0.3,d0:2,d1:6},W,H);
+    drawUFO(m.x,m.y+Math.sin(bp*Math.PI+i)*12*u,260*u,bp+i*0.5,k,Math.max(-0.3,Math.min(0.3,m.dx/(W*0.3)*(m.type==="pause"?0:Math.sin(m.p*Math.PI)))),H*0.985); }
 }
 function drawUFO(x,y,s,bp,k,tilt,ground){
   const hue=(bp*20)%360;
@@ -555,7 +594,8 @@ function drawCar(x,y,s,wheelA,k,beat,fr,moving){
 /* ---------- roaming cats ---------- */
 const CATS=[
   {fur:"#f0a24a",dark:"#c9762a",belly:"#ffe2b8",phones:"#2fd39a",ph:0},
-  {fur:"#5a5270",dark:"#2e2a3a",belly:"#8d84a6",phones:"#ff9a3c",ph:2.4}
+  {fur:"#5a5270",dark:"#2e2a3a",belly:"#8d84a6",phones:"#ff9a3c",ph:2.4},
+  {fur:"#eeeef4",dark:"#b9b6c8",belly:"#ffffff",phones:"#8c7bff",ph:4.1}
 ];
 function hash(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
 function catPoint(c,b,W,H){
@@ -563,10 +603,10 @@ function catPoint(c,b,W,H){
   return {x:W*(0.5+0.4*Math.sin(k*0.9+c.ph)*Math.cos(k*0.23)), y:H*(0.62+0.26*Math.sin(k*0.61+c.ph*1.7))};
 }
 function drawCats(t,beatPos,W,H,u){
-  const n=+S.cats; if(!n) return;
+  const n=S.count.cat; if(!n) return;
   const bpb=S.midi.sig.num;
   for(let i=0;i<n;i++){
-    const c=CATS[i], bp=beatPos+(i?0.5:0), b=Math.floor(bp), fr=bp-b;
+    const c=CATS[i%3], bp=beatPos+i*0.33, b=Math.floor(bp), fr=bp-b;
     const bar=Math.floor(b/bpb), stay=hash(bar*3+i)<0.34;
     const A=catPoint(c,stay?bar*bpb:b,W,H), B=catPoint(c,stay?bar*bpb:b+1,W,H);
     const hopT=Math.min(1,fr/0.42), e=hopT<1?(1-Math.cos(hopT*Math.PI))/2:1;
@@ -627,7 +667,7 @@ function draw(t,dt){
   const k=R.kick*S.amp, lv=R.lvl;
 
   ctx.setTransform(1,0,0,1,0,0);
-  if(S.chars.has("kaiju")&&R.stomp){ const fr=((beatPos%1)+1)%1, sh=Math.exp(-fr*10)*9*u*S.amp; ctx.setTransform(1,0,0,1,Math.sin(t*90)*sh,Math.cos(t*77)*sh); }
+  if(S.count.kaiju&&R.stomp){ const fr=((beatPos%1)+1)%1, sh=Math.exp(-fr*10)*9*u*S.amp; ctx.setTransform(1,0,0,1,Math.sin(t*90)*sh,Math.cos(t*77)*sh); }
   // background
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#120d26"); g.addColorStop(1,"#05040b");
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
@@ -853,8 +893,68 @@ function seg(id,key,after){
     S[key]=b.dataset.v; if(after) after();
   });
 }
-seg("aspectSeg","aspect",resize); seg("catSeg","cats");
-$("charChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{ const v=b.dataset.v, on=!S.chars.has(v); on?S.chars.add(v):S.chars.delete(v); b.setAttribute("aria-pressed",on?"true":"false"); }); seg("colorSeg","color"); seg("djSeg","dj");
+seg("aspectSeg","aspect",resize);
+const CHAR_DEFS=[["cat","ヘッドホン猫"],["ufo","UFO"],["alien","宇宙人"],["kaiju","火を吹く怪獣"],["dog","とぼとぼ犬"],["crab","横歩きカニ"],["car","ローライダー"]];
+function renderCharList(){
+  const box=$("charList"); box.innerHTML="";
+  for(const [k,name] of CHAR_DEFS){
+    const row=document.createElement("div"); row.className="crow";
+    const nm=document.createElement("span"); nm.className="nm"; nm.textContent=name;
+    const minus=document.createElement("button"); minus.className="mini"; minus.textContent="−"; minus.setAttribute("aria-label",name+"を減らす");
+    const cnt=document.createElement("span"); cnt.className="cnt"+(S.count[k]?" on":""); cnt.textContent=S.count[k];
+    const plus=document.createElement("button"); plus.className="mini"; plus.textContent="＋"; plus.setAttribute("aria-label",name+"を増やす");
+    minus.onclick=()=>{S.count[k]=Math.max(0,S.count[k]-1); renderCharList();};
+    plus.onclick=()=>{S.count[k]=Math.min(3,S.count[k]+1); renderCharList();};
+    row.append(nm,minus,cnt,plus); box.append(row);
+  }
+}
+renderCharList();
+let custSeq=1;
+function knockOutWhite(cv2){
+  const c=cv2.getContext("2d"), w=cv2.width, h=cv2.height, im=c.getImageData(0,0,w,h), d=im.data;
+  const corner=[0,w-1,(h-1)*w,(h-1)*w+w-1].map(i=>d[i*4+3]>250&&d[i*4]>235&&d[i*4+1]>235&&d[i*4+2]>235);
+  if(!corner.some(Boolean)) return;
+  const seen=new Uint8Array(w*h), st=[];
+  for(let x=0;x<w;x++){st.push(x,(h-1)*w+x);} for(let y=0;y<h;y++){st.push(y*w,y*w+w-1);}
+  while(st.length){ const i=st.pop(); if(seen[i]) continue; seen[i]=1; const p=i*4;
+    if(d[p]<228||d[p+1]<228||d[p+2]<228) continue; d[p+3]=0;
+    const x=i%w; if(x>0)st.push(i-1); if(x<w-1)st.push(i+1); if(i>=w)st.push(i-w); if(i<w*(h-1))st.push(i+w); }
+  c.putImageData(im,0,0);
+}
+function renderCustList(){
+  const box=$("custList"); box.innerHTML="";
+  S.custom.forEach((c,idx)=>{
+    const row=document.createElement("div"); row.className="cust";
+    const th=document.createElement("img"); th.src=c.thumb; th.alt=c.name;
+    const ctl=document.createElement("div"); ctl.className="ctl";
+    const l1=document.createElement("div"); l1.className="ln";
+    const sel=document.createElement("select"); sel.id="cmode"+c.id; sel.setAttribute("aria-label","動き方");
+    for(const [v,lab] of [["walk","歩き回る"],["ground","地面を往復"],["fly","空を飛ぶ"],["stay","その場でノる"]]){ const o=document.createElement("option"); o.value=v; o.textContent=lab; if(c.mode===v)o.selected=true; sel.append(o); }
+    sel.onchange=()=>c.mode=sel.value;
+    const fl=document.createElement("label"); fl.className="ln"; const fc=document.createElement("input"); fc.type="checkbox"; fc.id="cflip"+c.id; fc.checked=c.flip; fc.onchange=()=>c.flip=fc.checked; fl.append(fc,document.createTextNode("左右反転"));
+    l1.append(sel,fl);
+    const l2=document.createElement("label"); l2.className="ln"; l2.htmlFor="csize"+c.id; l2.textContent="大きさ";
+    const sz=document.createElement("input"); sz.type="range"; sz.id="csize"+c.id; sz.min=60; sz.max=480; sz.step=10; sz.value=c.size; sz.oninput=()=>c.size=+sz.value; l2.append(sz);
+    ctl.append(l1,l2);
+    const del=document.createElement("button"); del.className="mini"; del.textContent="×"; del.setAttribute("aria-label",c.name+"を削除"); del.onclick=()=>{S.custom.splice(idx,1); renderCustList();};
+    row.append(th,ctl,del); box.append(row);
+  });
+}
+$("custIn").onchange=e=>{
+  for(const f of e.target.files){
+    const url=URL.createObjectURL(f), im=new Image();
+    im.onload=()=>{
+      const sc=Math.min(1,512/Math.max(im.naturalWidth,im.naturalHeight)), c2=document.createElement("canvas");
+      c2.width=Math.round(im.naturalWidth*sc); c2.height=Math.round(im.naturalHeight*sc); c2.getContext("2d").drawImage(im,0,0,c2.width,c2.height);
+      knockOutWhite(c2);
+      const id=custSeq++;
+      S.custom.push({id,name:f.name,img:c2,thumb:c2.toDataURL("image/png"),mode:["walk","fly","ground","stay"][(id-1)%4],size:200,flip:false});
+      renderCustList(); URL.revokeObjectURL(url);
+    };
+    im.src=url;
+  }
+  e.target.value="";
+}; seg("colorSeg","color"); seg("djSeg","dj");
 $("winIn").oninput=e=>{S.win=+e.target.value;$("winLbl").textContent=S.win.toFixed(1)+" 秒";};
 $("ampIn").oninput=e=>{S.amp=+e.target.value;$("ampLbl").textContent=S.amp.toFixed(1);};
 $("titleIn").oninput=e=>S.title=e.target.value;
