@@ -378,11 +378,11 @@ function fmt(s){s=Math.max(0,s);const m=Math.floor(s/60);return m+":"+(s%60).toF
 function layout(W,H){
   const u=Math.min(W,H)/1080;
   if(S.aspect==="9:16"){
-    return {u,roll:{x:0,y:H*0.13,w:W,h:H*0.40},ph:0.3,dj:S.dj==="off"?null:{cx:W*0.5,by:H*1.005,h:H*0.47}};
+    return {u,roll:{x:0,y:H*0.13,w:W,h:S.dj==="off"?H*0.40:H*0.33},ph:0.3,dj:S.dj==="off"?null:{cx:W*0.5,by:H*1.005,h:H*0.47}};
   }
   const djOn=S.dj!=="off", left=S.dj==="left";
   const djh=H*(S.aspect==="1:1"?0.62:0.8);
-  const roll=djOn?(left?{x:W*0.3,y:H*0.15,w:W*0.7,h:H*0.66}:{x:0,y:H*0.15,w:W*0.7,h:H*0.66}):{x:0,y:H*0.15,w:W,h:H*0.66};
+  const roll=djOn?(left?{x:W*0.3,y:H*0.16,w:W*0.7,h:H*0.66}:{x:0,y:H*0.16,w:W*0.7,h:H*0.66}):{x:0,y:H*0.16,w:W,h:H*0.66};
   const dj=djOn?{cx:left?W*(S.aspect==="1:1"?0.2:0.17):W*(S.aspect==="1:1"?0.8:0.83),by:H*1.005,h:djh}:null;
   return {u,roll,ph:djOn&&left?0.32:0.3,dj};
 }
@@ -416,6 +416,10 @@ function plan(id,bp,o,W,H){
 }
 const FACE={};
 function faceOf(id,dx){ if(dx>3)FACE[id]=1; else if(dx<-3)FACE[id]=-1; return FACE[id]||1; }
+function vband(y,H,y0,y1){ // 9:16: walkers stay below the centered credit
+  if(S.aspect!=="9:16") return y;
+  const r=Math.max(0,Math.min(1,(y/H-y0)/Math.max(0.01,y1-y0))); return H*(0.67+r*0.31);
+}
 function depth(y,H){ return 0.72+0.28*Math.max(0,Math.min(1,(y-H*0.3)/(H*0.68))); }
 function drawChars(t,bp,W,H,u){
   const N=S.count;
@@ -430,12 +434,12 @@ function drawChars(t,bp,W,H,u){
   for(let i=0;i<N.car;i++){ const id=12+i*101, m=plan(id,B,{x0:0.03,x1:0.97,lanes:[0.93,0.985],pause:0.2,dash:0.35,d0:1,d1:4,reverse:0.5},W,H);
     list.push({y:m.y,f:()=>{ const s=290*u*depth(m.y,H), face=faceOf(id,m.dx)===1?-1:1;
       ctx.save(); ctx.translate(m.x,m.y); ctx.scale(face,1); drawCar(0,0,s,face*m.x/(s*0.09),k,beat,fr,m.moving); ctx.restore(); }}); }
-  for(let i=0;i<N.dog;i++){ const id=13+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.38,y1:0.97,pause:0.22,dash:0.15,d0:3,d1:7},W,H);
+  for(let i=0;i<N.dog;i++){ const id=13+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.38,y1:0.97,pause:0.22,dash:0.15,d0:3,d1:7},W,H); m.y=vband(m.y,H,0.38,0.97);
     list.push({y:m.y,f:()=>{ const s=175*u*depth(m.y,H), face=faceOf(id,m.dx), run=m.type==="dash";
       ctx.save(); ctx.translate(m.x,m.y); ctx.scale(face,1); drawDog(0,0,s,run?Math.floor(bp*4):(m.moving?beat:0),run?(bp*4)%1:(m.moving?fr:0),run); ctx.restore(); }}); }
-  for(let i=0;i<N.crab;i++){ const id=14+i*101, m=plan(id,B,{x0:0.06,x1:0.94,y0:0.35,y1:0.97,pause:0.3,dash:0.3,d0:1,d1:3,reverse:0.4},W,H);
+  for(let i=0;i<N.crab;i++){ const id=14+i*101, m=plan(id,B,{x0:0.06,x1:0.94,y0:0.35,y1:0.97,pause:0.3,dash:0.3,d0:1,d1:3,reverse:0.4},W,H); m.y=vband(m.y,H,0.35,0.97);
     list.push({y:m.y,f:()=>drawCrab(m.x,m.y,150*u*depth(m.y,H),m.moving?bp:Math.floor(bp),fr)}); }
-  for(let i=0;i<N.alien;i++){ const id=15+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.35,y1:0.97,pause:0.25,dash:0.15,warp:0.2,d0:2,d1:5},W,H);
+  for(let i=0;i<N.alien;i++){ const id=15+i*101, m=plan(id,B,{x0:0.08,x1:0.92,y0:0.35,y1:0.97,pause:0.25,dash:0.15,warp:0.2,d0:2,d1:5},W,H); m.y=vband(m.y,H,0.35,0.97);
     list.push({y:m.y,f:()=>{ ctx.save(); ctx.globalAlpha=m.warpA; drawAlien(m.x,m.y,175*u*depth(m.y,H)*(0.6+0.4*m.warpA),bp,fr,barStart||m.type==="pause");
       if(m.type==="warp"&&m.warpA<0.9){ ctx.globalAlpha=1-m.warpA; ctx.strokeStyle="#7be37b"; ctx.lineWidth=3*u; ctx.beginPath(); ctx.ellipse(m.x,m.y-90*u,60*u*(1.5-m.warpA),120*u,0,0,Math.PI*2); ctx.stroke(); }
       ctx.restore(); }}); }
@@ -446,6 +450,7 @@ function drawChars(t,bp,W,H,u){
              ground:{x0:0.04,x1:0.96,lanes:[0.985],pause:0.2,dash:0.25,d0:1,d1:4,reverse:0.5},
              fly:{x0:0.1,x1:0.9,y0:0.14,y1:0.5,pause:0.2,dash:0.3,d0:2,d1:5}}[mode];
     const m=O?plan(id,B,O,W,H):{x:W*(0.12+0.76*h2(id,0,1)),y:H*(0.6+0.36*h2(id,0,2)),dx:0,moving:false,p:0,type:"pause"};
+    if(mode==="walk") m.y=vband(m.y,H,0.35,0.97); else if(mode==="stay") m.y=vband(m.y,H,0.6,0.96);
     const item={y:m.y,f:()=>{
       const img=c.img, h=c.size*u*(mode==="fly"?1:depth(m.y,H)), w=h*img.width/img.height;
       const hop=m.moving&&mode!=="fly"?Math.sin(fr*Math.PI)*0.14*h*S.amp:0, bob=Math.exp(-fr*6)*0.04*h*S.amp;
@@ -610,7 +615,7 @@ function drawCats(t,beatPos,W,H,u){
     const bar=Math.floor(b/bpb), stay=hash(bar*3+i)<0.34;
     const A=catPoint(c,stay?bar*bpb:b,W,H), B=catPoint(c,stay?bar*bpb:b+1,W,H);
     const hopT=Math.min(1,fr/0.42), e=hopT<1?(1-Math.cos(hopT*Math.PI))/2:1;
-    const x=A.x+(B.x-A.x)*e, ground=A.y+(B.y-A.y)*e;
+    const x=A.x+(B.x-A.x)*e, ground=vband(A.y+(B.y-A.y)*e,H,0.36,0.88);
     const big=(b%bpb===0)?1.6:1;
     const jump=stay?0:Math.sin(hopT*Math.PI)*(hopT<1?1:0)*60*u*big*S.amp;
     const land=fr<0.42?0:(fr-0.42)/0.58;
@@ -771,28 +776,38 @@ function draw(t,dt){
   // header: hashtag line first, then the title, side by side across the full width
   const tb=ctx.createLinearGradient(0,0,0,pad*3.2); tb.addColorStop(0,"rgba(5,4,11,0.75)"); tb.addColorStop(1,"rgba(5,4,11,0)");
   ctx.fillStyle=tb; ctx.fillRect(0,0,W,pad*3.2);
-  const avail=W-pad*2, base=50*u;
+  const bar=Math.floor(beatPos/(m.sig.num))+1, beat=Math.floor(beatPos%m.sig.num)+1;
+  const barTxt=`BAR ${String(Math.max(1,bar)).padStart(3,"0")}.${Math.max(1,beat)}  ${Math.round(m.bpmAt(Math.max(0,t)))} BPM`;
+  let blockW=0;
+  if(S.aspect!=="9:16"){ ctx.font=`${46*u}px "Dela Gothic One"`; const a1=ctx.measureText(S.credit).width; ctx.font=`${18*u}px "JetBrains Mono"`; blockW=Math.max(a1,ctx.measureText("BAR 000.0  000 BPM").width)+pad; }
+  const avail=W-pad*2-blockW, base=50*u; let headBase=pad+base*0.95;
   const fTag=sz=>`700 ${sz}px "Zen Kaku Gothic New"`, fTit=sz=>`${sz}px "Dela Gothic One"`;
   ctx.font=fTag(base); const wTag=ctx.measureText(S.tag).width;
   ctx.font=fTit(base); const wTit=ctx.measureText(S.title).width;
   const gap=S.tag&&S.title?base*0.45:0, one=Math.min(1,avail/Math.max(1,wTag+gap+wTit));
   ctx.shadowColor="rgba(0,0,0,0.6)"; ctx.shadowBlur=10*u;
   if(one>=0.62||S.aspect!=="9:16"){
-    const sz=base*one, y=pad+sz*0.95;
+    const sz=base*one, y=pad+base*0.95; headBase=y;
     ctx.font=fTag(sz); ctx.fillStyle="#2fd39a"; ctx.fillText(S.tag,pad,y);
     ctx.font=fTit(sz); ctx.fillStyle="#fff"; ctx.fillText(S.title,pad+(wTag+gap)*one,y);
   } else {
     const s1=Math.min(base,base*avail/Math.max(1,wTag)), s2=Math.min(base*1.1,base*avail/Math.max(1,wTit));
     ctx.font=fTag(s1); ctx.fillStyle="#2fd39a"; ctx.fillText(S.tag,pad,pad+s1*0.95);
-    ctx.font=fTit(s2); ctx.fillStyle="#fff"; ctx.fillText(S.title,pad,pad+s1*1.2+s2*0.95);
+    ctx.font=fTit(s2); ctx.fillStyle="#fff"; ctx.fillText(S.title,pad,pad+s1*1.2+s2*0.95); headBase=pad+s1*1.2+s2*0.95;
   }
   ctx.shadowBlur=0;
-  const cy=S.aspect==="9:16"?H*0.585:H-pad*0.9;
-  ctx.font=`${20*u}px "JetBrains Mono"`; ctx.fillStyle="rgba(255,255,255,0.7)"; ctx.textAlign=S.aspect==="9:16"?"center":"right";
-  const bar=Math.floor(beatPos/(m.sig.num))+1, beat=Math.floor(beatPos%m.sig.num)+1;
-  ctx.fillText(`BAR ${String(Math.max(1,bar)).padStart(3,"0")}.${Math.max(1,beat)}  ${Math.round(m.bpmAt(Math.max(0,t)))} BPM`,S.aspect==="9:16"?W/2:W-pad,cy-48*u);
-  ctx.font=`${36*u}px "Dela Gothic One"`; ctx.fillStyle="#fff";
-  if(S.aspect==="9:16"){ctx.textAlign="center"; ctx.fillText(S.credit,W/2,cy);} else {ctx.fillText(S.credit,W-pad,cy);}
+  // credit + BAR/BPM sit top-right under the header (X's player puts its controls bottom-right)
+  if(S.aspect==="9:16"){
+    const dj=L.dj, cy=dj?Math.min(H*0.6,dj.by-dj.h-26*u):H*0.6; ctx.shadowColor="rgba(0,0,0,0.7)"; ctx.shadowBlur=14*u; ctx.textAlign="center";
+    ctx.font=`${22*u}px "JetBrains Mono"`; ctx.fillStyle="rgba(255,255,255,0.75)"; ctx.fillText(barTxt,W/2,cy-58*u);
+    ctx.font=`${56*u}px "Dela Gothic One"`; ctx.fillStyle="#fff"; ctx.fillText(S.credit,W/2,cy);
+    ctx.shadowBlur=0;
+  } else {
+    ctx.textAlign="right"; ctx.shadowColor="rgba(0,0,0,0.6)"; ctx.shadowBlur=10*u;
+    ctx.font=`${18*u}px "JetBrains Mono"`; ctx.fillStyle="rgba(255,255,255,0.7)"; ctx.fillText(barTxt,W-pad,headBase-50*u);
+    ctx.font=`${46*u}px "Dela Gothic One"`; ctx.fillStyle="#fff"; ctx.fillText(S.credit,W-pad,headBase);
+    ctx.shadowBlur=0;
+  }
   ctx.textAlign="left";
   // progress
   const span=Math.max(0.1,S.end-S.start), pr=Math.min(1,Math.max(0,(t-S.start)/span));
